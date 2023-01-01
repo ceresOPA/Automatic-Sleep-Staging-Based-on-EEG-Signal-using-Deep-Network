@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+    <script src="//unpkg.com/vue@3"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="//unpkg.com/element-plus/dist/index.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js" > </script>
+    <title>基于脑电信号的自动化睡眠分期</title>
+</head>
+<body>
+    
+
+{% raw %}
+<div id="app">
+    <div class="layout">
+        <div class="intro">
+            <el-card class="box-card">
+                <template #header>
+                  <div class="card-header">
+                    <span>基于脑电信号的自动化睡眠分期</span>
+                  </div>
+                </template>
+                <div>
+                    简介：使用单通道的脑电信号将睡眠阶段划分为5个时期，本任务属于是时序数据的分类问题，  
+                    依赖于信号间的时序关系，因此模型采用了CNN+GRU的网络结构，在实验中，测试集上准确率可达85%，MF1值可达0.78。
+                </div>
+                <div>
+                    使用方法： <br/>
+                    1. 点击下方"上传文件并预测"。<br/>
+                    2. 上传文件为txt格式的信号文件，其中每一行是一个浮点型的数值，即采样数据点。
+                </div>
+              </el-card>
+        </div>
+        <div class="top-show" id="chart">
+            <div v-if="!hascharts" style="line-height: 300px; text-align: center; color: #ccc; font-size: 23px;">睡眠分期结果显示区</div>
+        </div>
+        <div class="bottom-upload">
+            <el-upload
+            class="upload_block"
+            accept=".txt"
+            action="/upload"
+            :on-success="fileRespone"
+            :limit="1"
+        >
+            <el-button type="primary" plain>上传文件并预测</el-button>
+            <template #tip>
+                <div class="el-upload__tip">
+                    tips：仅限txt的信号文件
+                </div>
+            </template>
+            </el-upload>
+        </div>
+</div>
+{% endraw %}
+
+<script>
+    const { createApp } = Vue
+    
+    app = createApp({
+        data() {
+            return {
+                hascharts: false
+            }
+        },
+        mounted(){
+            axios.get("/test").then((res)=>{
+                console.log(res)
+            })
+
+        },
+        methods:{
+            fileRespone(res, file, fileList){
+                if(res.state == 'success'){
+                    
+                    this.hascharts = true
+
+                    let myChart = echarts.init(document.getElementById('chart'));
+                    var option;
+
+                    option = {
+                    title: {
+                        text: '睡眠分期结果'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: res.epochs
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['Wake', 'N1', 'N2', 'N3', 'REM']
+                    },
+                    series: [
+                        {
+                        data: res.preds,
+                        type: 'line'
+                        }
+                    ]
+                    };
+
+                    myChart.setOption(option);
+
+                }else{
+                    Msg(res.msg,'error')
+                }
+                
+            },
+        }
+    })
+    
+    app.use(ElementPlus);
+    app.mount("#app");
+</script>
+<style>
+#app{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#app .layout{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height: 800px;
+}
+
+.box-card{
+    width: 600px;
+}
+
+#app .layout .top-show{
+    width: 600px;
+    height: 360px;
+    border: #ccc dotted;
+    border-radius: 20px;
+}
+
+#app .layout .bottom-upload{
+    display: flex;
+    justify-content: center;
+}
+
+
+
+</style>
+</body>
+</html>

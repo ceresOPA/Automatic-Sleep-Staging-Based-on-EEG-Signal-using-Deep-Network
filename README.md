@@ -80,6 +80,21 @@ python predict.py --seq_len 16 --input_file "./data/eeg_signal.txt"
 
 
 
+## Web系统
+
+新增了一个简单的Web演示系统，界面截图如下：
+
+![image-20230101170849127](./images/image-20230101170849127.png)
+
+### 部署与启动
+
+```
+cd web
+./run.sh
+```
+
+执行run.sh会自动下载需要的依赖库，但是没有包含pytorch，如若没有需要前往官网下载，推荐1.10以上的版本。
+
 ## 补充
 
 我自己是在服务器上跑的，使用显卡为A100 256G显存，因此seq_len会设置的比较大些，自己可根据具体情况进行调整。有发现seq_len越大，效果会稍微好些，在设置seq_len=64，使用GRU时，测试集上准确率可达87%，MF1可达0.80。但使用Attention或者Transformer的Encoder进行训练时，发现效果并不怎么好，只能达到72%左右，而且如果堆叠太多层encoder就会跑不起来了，不是很懂。
